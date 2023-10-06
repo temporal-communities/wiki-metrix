@@ -1,0 +1,8 @@
+kaleido==0.2.1
+plotly-express==0.4.1
+plotly==5.14.1
+polars==0.19.7
+pywikibot==8.1.2
+requests==2.31.0
+tqdm==4.65.0
+XlsxWriter==3.1.6
