@@ -134,6 +134,9 @@ def wikilit(
             for langlink in langlinks
         }
 
+        # Add original page
+        cases[f"{page.site.code}:{page.title()}"] = page
+
     elif selection_method == "file":
         file = selection
         input_data = pl.read_csv(file, separator="\t")
