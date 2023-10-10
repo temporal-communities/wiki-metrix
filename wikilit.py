@@ -3,6 +3,7 @@ import pywikibot
 import requests
 import polars as pl
 from tqdm import tqdm
+import datetime
 
 version = "0.0.4"
 
@@ -28,7 +29,7 @@ def get_page_stats(page: pywikibot.Page):
             list(page.linkedPages(namespaces=[0], follow_redirects=False))
         ),  # Article namespace only (0)
         "n_categories": len(list(page.categories())),
-        "pageviews_60d": get_pageviews(page),
+        "pageviews_365d": get_pageviews(page),
         "first_revision": page_revisions[0].timestamp,
     }
 
@@ -41,29 +42,28 @@ def get_page_stats(page: pywikibot.Page):
     return data
 
 
-# Uses pageview api to count page views in time range for each page respectively
+# Use Wikimedia Pageviews REST API to get pageviews
 def get_pageviews(page: pywikibot.Page):
     lang = page.site.code
     site = page.site.family.name
+    user_agent = f"wiki-literature (https://github.com/temporal-communities/wiki-literature) requests/{requests.__version__}"
 
-    # Construct the API URL for pageviews
-    url = f"https://{lang}.{site}.org/w/api.php"
-    params = {
-        "action": "query",
-        "format": "json",
-        "prop": "pageviews",
-        "titles": page.title(),
-        "pvipdays": "60",  # Number of days for pageview count
-    }
+    # Wikimedia REST API
+    # https://wikitech.wikimedia.org/wiki/Analytics/AQS/Pageviews
+    # https://wikimedia.org/api/rest_v1/
+    end_date = datetime.date.today() - datetime.timedelta(days=2)  # Two days ago
+    start_date = end_date - datetime.timedelta(days=365)  # Two days minus one year ago
 
-    # Make the API request
-    response = requests.get(url, params=params)
+    agent_type = "user"  # user, bot, spider, all-agents
+    url = f"https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/{lang}.{site}/all-access/{agent_type}/{page.title(underscore=True)}/monthly/{start_date.strftime('%Y%m%d')}/{end_date.strftime('%Y%m%d')}"
+
+    response = requests.get(url, headers={"User-Agent": user_agent})
+
+    if response.status_code != 200:
+        raise Exception(f"Error: {response.status_code} {response.reason}")
+
     data = response.json()
-
-    page_data = data["query"]["pages"][str(page.pageid)]
-
-    # Filter out None values and sum
-    pageviews_sum = sum(filter(None, page_data["pageviews"].values()))
+    pageviews_sum = sum(filter(None, [item["views"] for item in data["items"]]))
 
     return pageviews_sum
 
