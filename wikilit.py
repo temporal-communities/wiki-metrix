@@ -133,7 +133,7 @@ def wikilit(
         # Given the (German) name of a category, extract statistics
         # for all articles belonging to that category.
         category = pywikibot.Category(mw_site, category_name)
-        pages = category.articles(recurse=True)
+        pages = category.articles(recurse=False)
 
         cases = {page.title(): page for page in pages}
 
