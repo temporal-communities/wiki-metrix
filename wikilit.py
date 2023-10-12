@@ -4,6 +4,7 @@ import requests
 import polars as pl
 from tqdm import tqdm
 import datetime
+import urllib.parse
 
 version = "0.0.4"
 
@@ -55,7 +56,10 @@ def get_pageviews(page: pywikibot.Page):
     start_date = end_date - datetime.timedelta(days=365)  # Two days minus one year ago
 
     agent_type = "user"  # user, bot, spider, all-agents
-    url = f"https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/{lang}.{site}/all-access/{agent_type}/{page.title(underscore=True)}/monthly/{start_date.strftime('%Y%m%d')}/{end_date.strftime('%Y%m%d')}"
+    title_uri = urllib.parse.quote(
+        page.title(underscore=True), safe=""
+    )  # URI-encoded title, no safe characters
+    url = f"https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/{lang}.{site}/all-access/{agent_type}/{title_uri}/monthly/{start_date.strftime('%Y%m%d')}/{end_date.strftime('%Y%m%d')}"
 
     response = requests.get(url, headers={"User-Agent": user_agent})
 
