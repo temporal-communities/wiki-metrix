@@ -13,6 +13,10 @@ def get_page_stats(page: pywikibot.Page):
     """
     Get page stats for a given page.
     """
+
+    # Handle redirects
+    page = handle_redirect(page)
+
     page_content = page.get(force=True)
     length_in_bytes = len(page_content.encode("utf-8"))
     page_revisions = list(page.revisions(reverse=True))
@@ -87,6 +91,19 @@ def collect_page_stats(cases: dict[str, pywikibot.Page]):
     return df
 
 
+def handle_redirect(page: pywikibot.Page):
+    """
+    Check if page is a redirect and return target page.
+    """
+    if page.isRedirectPage():
+        redirect_title = page.title(underscore=True)
+        page = page.getRedirectTarget()
+        print(
+            f"Warning: Page {redirect_title} is a redirect to {page.title(underscore=True)}."
+        )
+    return page
+
+
 # Convert arguments to named parameters
 def wikilit(
     selection_method: str,
@@ -125,6 +142,10 @@ def wikilit(
         # for all available language editions.
         page_title = selection
         page = pywikibot.Page(mw_site, page_title)
+
+        # Handle redirects
+        # Must be done here to properly get langlinks
+        page = handle_redirect(page)
 
         langlinks = page.langlinks()
         # Sort keys
