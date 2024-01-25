@@ -7,6 +7,7 @@ import datetime
 import urllib.parse
 
 version = "0.0.4"
+user_agent = f"wiki-metrix (https://github.com/temporal-communities/wiki-metrix) requests/{requests.__version__}"
 
 
 def get_page_stats(page: pywikibot.Page):
