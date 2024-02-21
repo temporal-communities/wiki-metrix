@@ -162,7 +162,7 @@ def wikidata_qids_to_titles(qids: pl.Series, site: pywikibot.BaseSite) -> pl.Ser
 
 
 # Convert arguments to named parameters
-def wikilit(
+def wikimetrix(
     selection_method: str,
     selection: str,
     lang="de",
@@ -370,12 +370,14 @@ if __name__ == "__main__":
     global_arguments = [args.lang, args.site]
     # Call appropriate function
     if args.langlinks:
-        wikilit(
+        wikimetrix(
             selection_method="langlinks", selection=args.langlinks, *global_arguments
         )
     elif args.category:
-        wikilit(selection_method="category", selection=args.category, *global_arguments)
+        wikimetrix(
+            selection_method="category", selection=args.category, *global_arguments
+        )
     elif args.file:
-        wikilit(selection_method="file", selection=args.file, *global_arguments)
+        wikimetrix(selection_method="file", selection=args.file, *global_arguments)
     else:
         parser.print_help()
