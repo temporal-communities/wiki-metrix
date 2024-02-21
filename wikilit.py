@@ -1,10 +1,11 @@
 import argparse
-import pywikibot
-import requests
-import polars as pl
-from tqdm import tqdm
 import datetime
 import urllib.parse
+
+import polars as pl
+import pywikibot
+import requests
+from tqdm import tqdm
 
 version = "0.0.4"
 user_agent = f"wiki-metrix (https://github.com/temporal-communities/wiki-metrix) requests/{requests.__version__}"
@@ -52,7 +53,6 @@ def get_page_stats(page: pywikibot.Page):
 def get_pageviews(page: pywikibot.Page):
     lang = page.site.code
     site = page.site.family.name
-    user_agent = f"wiki-literature (https://github.com/temporal-communities/wiki-literature) requests/{requests.__version__}"
 
     # Wikimedia REST API
     # https://wikitech.wikimedia.org/wiki/Analytics/AQS/Pageviews
@@ -77,17 +77,36 @@ def get_pageviews(page: pywikibot.Page):
     return pageviews_sum
 
 
+def create_meta_dict(label: str) -> dict[str, str]:
+    """
+    Create a meta dictionary with label and timestamp.
+    """
+    utc_timestamp = datetime.datetime.now(datetime.timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
+    return {"selection_case": label, "timestamp": utc_timestamp}
+
+
 def collect_page_stats(cases: dict[str, pywikibot.Page]):
     """
     Collect page stats for a given list of pages.
     """
     dicts = []
-    for case_label, page in (pbar := tqdm(cases.items(), desc="Getting page stats")):
-        pbar.set_postfix_str(case_label)
-        stats = get_page_stats(page)
-        dicts.append(dict({"selection_case": case_label}, **stats))
+    null_cases = {k: v for k, v in cases.items() if v is None}
+    non_null_cases = {k: v for k, v in cases.items() if v is not None}
 
-    # print stats
+    # Add null cases
+    for case_label in null_cases.keys():
+        dicts.append(create_meta_dict(case_label))
+
+    # Fetch stats for non-null cases
+    for case_label, page in (
+        pbar := tqdm(non_null_cases.items(), desc="Getting page stats")
+    ):
+        pbar.set_postfix_str(page.title())
+        stats = get_page_stats(page)
+        dicts.append(dict(create_meta_dict(case_label), **stats))
+
     df = pl.from_dicts(dicts)
     return df
 
@@ -105,13 +124,50 @@ def handle_redirect(page: pywikibot.Page):
     return page
 
 
+def wikidata_qids_to_titles(qids: pl.Series, site: pywikibot.BaseSite) -> pl.Series:
+    site_id = site.code + "wiki"  # e.g. "enwiki"
+
+    titles = []
+    no_sitelink = []
+    for qid in (pbar := tqdm(qids, desc="Getting article titles from Wikidata")):
+        pbar.set_postfix_str(qid)
+
+        url = f"https://wikidata.org/w/rest.php/wikibase/v0/entities/items/{qid}/sitelinks/{site_id}"
+        res = requests.get(url, headers={"User-Agent": user_agent})
+        json = res.json()
+
+        if res.status_code != 200:
+            if json["code"] == "sitelink-not-defined":
+                no_sitelink.append(qid)
+                titles.append(None)
+                continue
+
+            raise Exception(f"Error: {res.status_code} {res.reason}")
+
+        # Example response
+        # {
+        #     "badges": [],
+        #     "title": "Douglas Adams",
+        #     "url": "https://de.wikipedia.org/wiki/Douglas_Adams"
+        # }
+
+        titles.append(json["title"])
+
+    if len(no_sitelink) > 0:
+        print(
+            f"Warning: No sitelink found on {site.code}.{site.family.name} for {', '.join(no_sitelink)}."
+        )
+
+    return pl.Series(titles)
+
+
 # Convert arguments to named parameters
 def wikilit(
     selection_method: str,
     selection: str,
     lang="de",
     site="wikipedia",
-    article_title_column="article",
+    input_column="article",
 ):
     input_data = None
 
@@ -131,7 +187,7 @@ def wikilit(
     if selection_method == "category":
         category_name = selection
 
-        # Given the (German) name of a category, extract statistics
+        # Given the name of a category, extract statistics
         # for all articles belonging to that category.
         category = pywikibot.Category(mw_site, category_name)
         pages = category.articles(recurse=False)
@@ -139,7 +195,7 @@ def wikilit(
         cases = {page.title(): page for page in pages}
 
     elif selection_method == "langlinks":
-        # Given the (German) name of an article, extract statistics
+        # Given the name of an article, extract statistics
         # for all available language editions.
         page_title = selection
         page = pywikibot.Page(mw_site, page_title)
@@ -167,13 +223,50 @@ def wikilit(
         file = selection
         input_data = pl.read_csv(file, separator="\t")
 
-        # Construct cases
-        cases = {
-            row[article_title_column]: pywikibot.Page(
-                mw_site, row[article_title_column]
+        # Check if input_column contains Wikidata Q-IDs as URL
+        if all(
+            input_data[input_column].str.contains(
+                r"^http://www.wikidata.org/entity/Q\d+$"
             )
-            for row in input_data.to_dicts()
-        }
+        ):
+            # Remove URL prefix
+            input_data = input_data.with_columns(
+                pl.col(input_column)
+                .str.replace(r"^http://www.wikidata.org/entity/", "")
+                .keep_name()
+            )
+
+        # Check if input_column contains Wikidata Q-IDs
+        if all(input_data[input_column].str.contains(r"^Q\d+$")):
+            util_title_column = "util_article_title"
+            input_data = input_data.with_columns(
+                pl.col(input_column)
+                .map_batches(
+                    lambda qids: wikidata_qids_to_titles(qids, mw_site),
+                    # pl.String | None,
+                )
+                .alias(util_title_column)
+            )
+
+            # Construct cases
+            cases = {}
+            for row in input_data.to_dicts():
+                if row[util_title_column] is not None:
+                    cases[row[input_column]] = pywikibot.Page(
+                        mw_site, row[util_title_column]
+                    )
+                else:
+                    cases[row[input_column]] = None
+
+            # Remove utility column
+            input_data.drop_in_place(util_title_column)
+
+        else:
+            # Construct cases
+            cases = {
+                row[input_column]: pywikibot.Page(mw_site, row[input_column])
+                for row in input_data.to_dicts()
+            }
 
     # Error if no cases
     if len(cases) == 0:
@@ -181,26 +274,44 @@ def wikilit(
 
     # Get page stats for all cases
     stats = collect_page_stats(cases)
-    meta_columns = ["selection_method", "selection", "selection_case"]
+
+    meta_columns = [
+        "label",
+        "timestamp",
+        "selection_method",
+        "selection",
+        "selection_case",
+    ]
     stats = (
         # Add selection method and selection value as columns
         stats.with_columns(
             selection_method=pl.lit(selection_method),
             selection=pl.lit(selection),
-        )
-        # Move meta columns to end
-        .select(
-            [col for col in stats.columns if col not in meta_columns] + meta_columns
+            # Create a label column, e.g. "Q123/Title" if selection_case is a Q-ID
+            label=pl.when(pl.col("selection_case").str.contains(r"^Q\d+$"))
+            .then(pl.col("selection_case") + pl.lit("/") + pl.col("title"))
+            .otherwise(pl.col("selection_case")),
         )
     )
 
     # If selection_method is file, add stats to original data
     if selection_method == "file":
         assert input_data is not None
-        # Join data
         stats = input_data.join(
-            stats, left_on=article_title_column, right_on="title", how="left"
+            # Join data
+            stats,
+            left_on=input_column,
+            right_on="selection_case",
+            how="left",
+        ).with_columns(
+            # Re-add selection_case column
+            selection_case=pl.col(input_column)
         )
+
+    # Move meta columns to end
+    stats = stats.select(
+        [col for col in stats.columns if col not in meta_columns] + meta_columns
+    )
 
     return stats
 
