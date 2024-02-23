@@ -2,7 +2,13 @@
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/temporal-communities/wiki-metrix/blob/main/WikiMetrix.ipynb)
 
-A Python notebook to compare wiki articles based on [weltliteratur/fontane](https://github.com/weltliteratur/fontane).
+**Jupyter notebook to retrieve and visualise article-level Wikipedia data**
+
+The collaboratively edited online encyclopaedia Wikipedia currently contains over 60 million articles in over 300 language editions, covering topics across many fields of knowledge. Scholars of reception-oriented literary studies have also discovered Wikipedia as a research topic and a data resource, as it collects encyclopaedic entries and metadata about literature, authors, literary works, genres, periods and other categories relevant to the history of literature.
+
+Data-analytical evaluation of various Wikipedia metrics opens up an opportunity to empirically assess engagement with literature on Wikipedia and to further diversify statements about literary canonisation, valuation practices and popularity in the context of open encyclopaedia projects. This Jupyter notebook, developed by Research Area 5 _Building Digital Communities_ of the Cluster of Excellence _Temporal Communities_, is a user-friendly tool for retrieving and visualising article-level data from Wikipedia.
+
+Work based on [weltliteratur/fontane](https://github.com/weltliteratur/fontane).
 
 ---
 
