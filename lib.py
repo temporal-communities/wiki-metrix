@@ -62,7 +62,7 @@ def get_pageviews(page: pywikibot.Page):
 
     agent_type = "user"  # user, bot, spider, all-agents
     title_uri = urllib.parse.quote(
-        page.title(underscore=True), safe=""
+        page.title(underscore=True, with_section=False), safe=""
     )  # URI-encoded title, no safe characters
     url = f"https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/{lang}.{site}/all-access/{agent_type}/{title_uri}/monthly/{start_date.strftime('%Y%m%d')}/{end_date.strftime('%Y%m%d')}"
 
