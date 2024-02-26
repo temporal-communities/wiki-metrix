@@ -1,5 +1,6 @@
 # WikiMetrix
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10698425.svg)](https://doi.org/10.5281/zenodo.10698425)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/temporal-communities/wiki-metrix/blob/main/WikiMetrix.ipynb)
 
 **Jupyter notebook to retrieve and visualise article-level Wikipedia data**
