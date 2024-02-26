@@ -1,0 +1,74 @@
+cff-version: 1.2.0
+title: WikiMetrix
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - affiliation: "Freie Universität Berlin, Deutschland"
+    family-names: Illmer
+    given-names: Viktor J.
+    orcid: https://orcid.org/0000-0002-7334-781X
+  - affiliation: "Freie Universität Berlin, Deutschland"
+    family-names: Soethaert
+    given-names: Bart
+    orcid: https://orcid.org/0000-0002-3845-605X
+  - affiliation: "Freie Universität Berlin, Deutschland"
+    family-names: Welz
+    given-names: Lilly
+  - affiliation: "Freie Universität Berlin, Deutschland"
+    family-names: Fischer
+    given-names: Frank
+    orcid: https://orcid.org/0000-0003-2419-6629
+  - affiliation: "Humboldt-Universität zu Berlin, Deutschland"
+    family-names: "Jäschke"
+    given-names: Robert
+    orcid: https://orcid.org/0000-0003-3271-9653
+repository-code: "https://github.com/temporal-communities/wiki-metrix"
+abstract: >-
+  Jupyter notebook to retrieve and visualise article-level
+  Wikipedia data
+license: MIT
+preferred-citation:
+  type: "conference-paper"
+  title: "Literatur im Wikiversum – Eine praktische Annäherung über API-Abfragen    \ und Wikipedia-Metriken"
+  abstract: "Die kollaborativ erstellte Online-Enzyklopädie Wikipedia bietet mit    \ derzeit über 60 Millionen Artikeln in über 300 Sprachversionen Informationen    \ zu den unterschiedlichsten Wissensbereichen. Auch die rezeptionsorientierte Literaturwissenschaft    \ hat das Projekt inzwischen als Forschungsgegenstand und Datenressource entdeckt,    \ da es viele enzyklopädische Beiträge und Metadaten zur Literatur und zum    \ literarischen Leben versammelt, zu Autor*innen, literarischen Werken, Genres,    \ Epochen und anderen literaturgeschichtlich relevanten Kategorien. Die datenanalytische    \ Auswertung verschiedener Wikipedia-Metriken ermöglicht es, die Auseinandersetzung    \ mit Literatur in Wikipedia evaluierbar zu machen und Aussagen über literarische    \ Kanonizität, Wertungspraktiken und Popularität im Kontext offener Enzyklopä    dieprojekte weiter zu diversifizieren. Im Zentrum des (hands-on) Workshops steht    \ die Wikipedia-API, mit deren Funktionsweise die Teilnehmer*innen vertraut gemacht    \ werden. Sukzessive werden Abfrageskripte in Form eines Jupyter Notebooks erarbeitet."
+  authors:
+    - affiliation: "Freie Universität Berlin, Deutschland"
+      family-names: Illmer
+      given-names: Viktor J.
+      orcid: https://orcid.org/0000-0002-7334-781X
+    - affiliation: "Freie Universität Berlin, Deutschland"
+      family-names: Soethaert
+      given-names: Bart
+      orcid: https://orcid.org/0000-0002-3845-605X
+    - affiliation: "Freie Universität Berlin, Deutschland"
+      family-names: Welz
+      given-names: Lilly
+    - affiliation: "Freie Universität Berlin, Deutschland"
+      family-names: Fischer
+      given-names: Frank
+      orcid: https://orcid.org/0000-0003-2419-6629
+    - affiliation: "Humboldt-Universität zu Berlin, Deutschland"
+      family-names: "Jäschke"
+      given-names: Robert
+      orcid: https://orcid.org/0000-0003-3271-9653
+  date-released: "2024-02-21"
+  conference:
+    name: "DHd 2024 Quo Vadis DH"
+    alias: DHd2024
+  doi: 10.5281/zenodo.10698426
+  keywords:
+    - DHd2024
+    - Paper
+    - Workshop
+    - Wikipedia
+    - Literatur
+    - API
+    - Python
+    - Crowdsourcing
+    - "Einführung"
+    - Lehre
+    - Werkzeuge
+  license:
+    - CC-BY-4.0
